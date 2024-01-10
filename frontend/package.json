@@ -12,15 +12,16 @@
     "clipboard": "^2.0.11",
     "element-plus": "^2.4.3",
     "mitt": "^3.0.1",
+    "moment": "^2.30.1",
     "vue": "^3.2.37",
     "vue-router": "4"
   },
   "devDependencies": {
     "@vicons/ionicons5": "^0.12.0",
     "@vicons/material": "^0.12.0",
+    "@vitejs/plugin-vue": "^3.0.3",
     "less": "^4.2.0",
     "naive-ui": "^2.35.0",
-    "@vitejs/plugin-vue": "^3.0.3",
     "vite": "^3.0.7"
   }
 }

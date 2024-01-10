@@ -1,10 +1,13 @@
 <script>
 import { h } from "vue";
 import { RouterLink } from "vue-router";
-import { NIcon, NConfigProvider } from "naive-ui";
+import { NIcon, NConfigProvider, NMenu, NTabs, NTabPane, NSpace, NLayout, NLayoutSider, NLayoutContent, NMessageProvider, NSwitch, NDivider } from 'naive-ui';
+
 import {
-  Code as CodeIcon, Home as HomeIcon,
+  Home as HomeIcon,
   AlertCircleSharp as AboutIcon,
+  SettingsSharp as SettingIcon,
+  Barcode as OcrIcon,
 } from '@vicons/ionicons5'
 
 import { darkTheme } from 'naive-ui'
@@ -50,6 +53,36 @@ export default {
           ),
           key: "go-back-about",
           icon: renderIcon(AboutIcon)
+        },{
+          label: () => h(
+              RouterLink,
+              {
+                to: {
+                  name: 'task',
+                  path: "/task",
+                }
+              },
+              { default: () => "任务管理" }
+          ),
+          key: "任务管理",
+          icon: renderIcon(OcrIcon),
+          path: "/task",
+        },
+        {
+          label: () => h(
+              RouterLink,
+              {
+                to: {
+                  name: 'setting',
+                  path: "/setting",
+                }
+              },
+              { default: () => "软件设置" }
+          ),
+          key: "软件设置",
+          icon: renderIcon(SettingIcon),
+          path: "/setting",
+
         },
       ],
       railStyle: ({
@@ -114,8 +147,11 @@ export default {
             </div>
         </n-layout-sider>
         <n-layout-content>
-          <router-view />
+          <n-message-provider>
+            <router-view />
+          </n-message-provider>
         </n-layout-content>
+
       </n-layout>
     </n-space>
   </n-config-provider>

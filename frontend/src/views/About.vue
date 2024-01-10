@@ -1,4 +1,4 @@
-<script setup>
+<script >
 import {reactive} from 'vue'
 </script>
 

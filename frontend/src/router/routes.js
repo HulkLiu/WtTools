@@ -5,6 +5,22 @@ const routes = [
         path: '/',
         component: Home
     },
+    {
+        name: 'task',
+        path: '/task',
+        component: () => import('../views/task.vue'),
+        meta: {
+            keepAlive: true // 标记该页面需要缓存
+        }
+    },
+    {
+        name: 'setting',
+        path: '/setting',
+        component: () => import('../views/Setting.vue'),
+        meta: {
+            keepAlive: true // 标记该页面需要缓存
+        }
+    },
     // {
     //     name: 'cmd',
     //     path: '/cmd',
