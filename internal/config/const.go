@@ -30,8 +30,8 @@ const (
 	GitApiURL   = "https://api.github.com/repos/%s/%s/contents/%s"
 	GitTagURL   = "https://api.github.com/repos/evercyan/cantor/tags"
 	GitFileURL  = "https://cdn.jsdelivr.net/gh/%s/%s/%s"
-	GitDBFile   = "resource/cantor.db"
-	GitFilePath = "resource/%s/%s%s"
+	GitDBFile   = "service/cantor.db"
+	GitFilePath = "service/%s/%s%s"
 	GitMarkFile = "mark"
 	GitMessage  = "upload by cantor"
 	//GitRepoURL  = "https://github.com/evercyan/cantor"
@@ -41,7 +41,8 @@ const (
 
 //MySQL
 var (
-	Dsn = "root:root@tcp(localhost:3306)/test"
+	//Dsn = "root:root@tcp(localhost:3306)/test"
+	Dsn = "root:root@tcp(127.0.0.1:3306)/test?charset=utf8mb4&parseTime=True&loc=Local"
 )
 
 //Es 配置
@@ -71,4 +72,18 @@ var (
 
 var (
 	TimeFormat = "20060102150405"
+	DateFormat = "2006-01-02"
+)
+
+//爬虫配置
+const (
+	NilParser = "NilParser"
+
+	// ElasticSearch
+	ElasticIndex = "php6663"
+
+	// Rate limiting
+	Qps = 5
+
+	IsSAVE = true
 )

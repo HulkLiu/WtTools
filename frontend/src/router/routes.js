@@ -6,6 +6,14 @@ const routes = [
         component: Home
     },
     {
+        name: 'resource',
+        path: '/resource',
+        component: () => import('../views/Resource.vue'),
+        meta: {
+            keepAlive: true // 标记该页面需要缓存
+        }
+    },
+    {
         name: 'task',
         path: '/task',
         component: () => import('../views/task.vue'),

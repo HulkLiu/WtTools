@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"github.com/HulkLiu/WtTools/internal/config"
+	"github.com/HulkLiu/WtTools/internal/service"
 	"github.com/HulkLiu/WtTools/internal/utils"
 	"github.com/evercyan/brick/xfile"
+	"github.com/olivere/elastic/v7"
 	"github.com/sirupsen/logrus"
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"log"
 	"os/exec"
 )
 
@@ -19,18 +22,40 @@ type App struct {
 	CfgFile string
 	LogFile string
 
-	SetManage  SettingManage
-	TaskManage TaskManager
+	SetManage      SettingManage
+	TaskManage     TaskManager
+	ResourceManage service.ResourceManage
+	CourseManage   service.CourseManage
 }
 
 func NewApp() *App {
 	return &App{}
 }
 
+var (
+	EsClient *elastic.Client
+)
+
+func init() {
+	EsClient, err = elastic.NewClient(elastic.SetSniff(false))
+	if err != nil {
+		log.Printf("initEsData connect failed,err:%v", err)
+		return
+	}
+}
+
 // OnStartup 初始化
 func (a *App) OnStartup(ctx context.Context) {
 	a.Ctx = ctx
 	cfgPath := utils.GetCfgPath()
+
+	//课程管理
+	a.CourseManage = service.CourseManage{
+		ElasticIndex: config.ElasticIndex,
+		Client:       EsClient,
+		Err:          nil,
+		PageSize:     10,
+	}
 
 	//设置
 	a.SetManage = NewSet()
@@ -44,6 +69,7 @@ func (a *App) OnStartup(ctx context.Context) {
 	a.TaskManage = TaskManager{}
 	a.TaskManage.TasksDB = NewTaskDB()
 
+	a.ResourceManage = service.NewResource()
 }
 
 // diag ...

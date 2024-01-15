@@ -1,56 +1,103 @@
-<script >
-import {reactive} from 'vue'
-</script>
-
 <template>
-  <main>
-    <div>
-        <h1>About</h1>
-    </div>
-  </main>
+  <n-space vertical :size="12">
+    <n-space>
+      <n-button @click="downloadCsv">
+        导出 CSV（原始数据）
+      </n-button>
+      <n-button @click="exportSorterAndFilterCsv">
+        导出 CSV（展示的数据）
+      </n-button>
+    </n-space>
+    <n-data-table
+        ref="tableRef"
+        :columns="columns"
+        :data="data"
+        :pagination="pagination"
+        :bordered="false"
+    />
+  </n-space>
 </template>
 
-<style scoped>
-.result {
-  height: 20px;
-  line-height: 20px;
-  margin: 1.5rem auto;
-}
+<script>
+import { defineComponent, ref } from "vue";
 
-.input-box .btn {
-  width: 60px;
-  height: 30px;
-  line-height: 30px;
-  border-radius: 3px;
-  border: none;
-  margin: 0 0 0 20px;
-  padding: 0 8px;
-  cursor: pointer;
-}
 
-.input-box .btn:hover {
-  background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
-  color: #333333;
-}
+const columns = [
+  {
+    title: "Name",
+    key: "name",
+    sorter: "default"
+  },
+  {
+    title: "Age",
+    key: "age",
+    sorter: (row1, row2) => row1.age - row2.age
+  },
+  {
+    title: "Address",
+    key: "address",
+    filterOptions: [
+      {
+        label: "London",
+        value: "London"
+      },
+      {
+        label: "New York",
+        value: "New York"
+      }
+    ],
+    filter: (value, row) => {
+      return !!~row.address.indexOf(value);
+    }
+  }
+];
 
-.input-box .input {
-  border: none;
-  border-radius: 3px;
-  outline: none;
-  height: 30px;
-  line-height: 30px;
-  padding: 0 10px;
-  background-color: rgba(240, 240, 240, 1);
-  -webkit-font-smoothing: antialiased;
-}
+const data = [
+  {
+    key: 0,
+    name: "John Brown",
+    age: 18,
+    address: "New York No. 1 Lake Park"
+  },
+  {
+    key: 1,
+    name: "Jim Green",
+    age: 28,
+    address: "London No. 1 Lake Park"
+  },
+  {
+    key: 2,
+    name: "Joe Black",
+    age: 38,
+    address: "Sidney No. 1 Lake Park"
+  },
+  {
+    key: 3,
+    name: "Jim Red",
+    age: 48,
+    address: "London No. 2 Lake Park"
+  }
+];
 
-.input-box .input:hover {
-  border: none;
-  background-color: rgba(255, 255, 255, 1);
-}
+export default defineComponent({
+  setup() {
+    const tableRef = ref();
 
-.input-box .input:focus {
-  border: none;
-  background-color: rgba(255, 255, 255, 1);
-}
-</style>
+    const downloadCsv = () => tableRef.value?.downloadCsv({ fileName: "data-table" });
+
+    const exportSorterAndFilterCsv = () => tableRef.value?.downloadCsv({
+      fileName: "sorter-filter",
+      keepOriginalData: false
+    });
+
+    return {
+      data,
+      tableRef,
+      downloadCsv,
+      exportSorterAndFilterCsv,
+      columns,
+      pagination: false
+    };
+  }
+});
+</script>

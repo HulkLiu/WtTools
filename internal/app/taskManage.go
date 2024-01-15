@@ -149,13 +149,13 @@ func (tm *TaskManager) CompleteTask(id int) error {
 	tm.TaskList.mu.Lock()
 	defer tm.TaskList.mu.Unlock()
 
-	for i, task := range tm.TaskList.Tasks {
-		if task.ID == id {
-			tm.TaskList.Tasks[i].Completed = 1
-			tm.TaskList.Tasks[i].UpdatedAt = time.Now().Format(config.TimeFormat)
-			return nil
-		}
-	}
+	//for i, task := range tm.TaskList.Tasks {
+	//	if task.ID == id {
+	//		tm.TaskList.Tasks[i].Completed = 1
+	//		tm.TaskList.Tasks[i].UpdatedAt = time.Now().Format(config.TimeFormat)
+	//		return nil
+	//	}
+	//}
 
 	return errors.New("task not found")
 }
@@ -180,17 +180,17 @@ func (tm *TaskManager) UpdateTask(id int, name, description string, completed in
 	tm.TaskList.mu.Lock()
 	defer tm.TaskList.mu.Unlock()
 
-	for i, task := range tm.TaskList.Tasks {
-		if task.ID == id {
-			tm.TaskList.Tasks[i].Name = name
-			tm.TaskList.Tasks[i].Description = description
-			tm.TaskList.Tasks[i].UpdatedAt = time.Now().Format(config.TimeFormat)
-			tm.TaskList.Tasks[i].Completed = completed
-			return nil
-		}
+	data := Task{
+		Name:        name,
+		ID:          id,
+		Description: description,
+		Completed:   completed,
 	}
-
-	return errors.New("task not found")
+	err := tm.TasksDB.Save(&data).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // FilterTasks 返回符合过滤条件的任务

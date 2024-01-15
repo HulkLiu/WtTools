@@ -53,7 +53,23 @@ export default {
           ),
           key: "go-back-about",
           icon: renderIcon(AboutIcon)
-        },{
+        },
+        {
+          label: () => h(
+              RouterLink,
+              {
+                to: {
+                  name: 'resource',
+                  path: "/resource",
+                }
+              },
+              { default: () => "资源管理" }
+          ),
+          key: "资源管理",
+          icon: renderIcon(OcrIcon),
+          path: "/resource",
+        },
+        {
           label: () => h(
               RouterLink,
               {
