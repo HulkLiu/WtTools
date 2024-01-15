@@ -80,7 +80,7 @@ const (
 	NilParser = "NilParser"
 
 	// ElasticSearch
-	ElasticIndex = "php6663"
+	ElasticIndex = "php6667"
 
 	// Rate limiting
 	Qps = 5

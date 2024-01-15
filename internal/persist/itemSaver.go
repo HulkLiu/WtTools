@@ -7,15 +7,17 @@ import (
 	"github.com/HulkLiu/WtTools/internal/config"
 	"github.com/HulkLiu/WtTools/internal/engine"
 	"github.com/olivere/elastic/v7"
+	"log"
 )
 
 //http://localhost:9200/php6661/_search
+var err error
 
-func ItemSaver(index string) (chan engine.Item, error) {
-	client, err := elastic.NewClient(elastic.SetSniff(false))
-	if err != nil {
-		return nil, err
-	}
+func ItemSaver(index string, client *elastic.Client) (chan engine.Item, error) {
+	//client, err := elastic.NewClient(elastic.SetSniff(false))
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	out := make(chan engine.Item)
 	count := 0
@@ -25,12 +27,12 @@ func ItemSaver(index string) (chan engine.Item, error) {
 			//fmt.Printf("%v -> got data %v\n", count, item)
 			if config.IsSAVE {
 				if err = save(item, client, index); err != nil {
-					fmt.Printf("save false data %+v\n", item)
+					log.Printf("save false data %+v\n", item.Url)
 				} else {
 					count++
 				}
 			}
-			fmt.Printf("Has successfully obtained data for %v items\n", count)
+			fmt.Printf("Has successfully obtained data for %v items\n", item.Url)
 
 		}
 	}()
@@ -41,7 +43,6 @@ func save(item engine.Item, client *elastic.Client, index string) (err error) {
 
 	indexServer := client.Index().
 		Index(index).
-		Type(item.Type).
 		BodyJson(item)
 	if item.Id != "" {
 		indexServer.Id(item.Id)

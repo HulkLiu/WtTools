@@ -7,54 +7,71 @@ import (
 	"github.com/HulkLiu/WtTools/internal/service"
 	"github.com/HulkLiu/WtTools/internal/utils"
 	"github.com/evercyan/brick/xfile"
+	"github.com/go-redis/redis"
 	"github.com/olivere/elastic/v7"
 	"github.com/sirupsen/logrus"
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+
 	"log"
 	"os/exec"
 )
 
 type App struct {
-	Ctx     context.Context
-	Log     *logrus.Logger
-	CfgFile string
-	LogFile string
-
+	Ctx            context.Context
+	Log            *logrus.Logger
+	CfgFile        string
+	LogFile        string
+	DB             DbClient
 	SetManage      SettingManage
-	TaskManage     TaskManager
+	TaskManage     service.TaskManager
 	ResourceManage service.ResourceManage
 	CourseManage   service.CourseManage
+}
+type DbClient struct {
+	EsClient    *elastic.Client
+	MysqlClient *gorm.DB
+	RedisClient *redis.Client
 }
 
 func NewApp() *App {
 	return &App{}
 }
 
-var (
-	EsClient *elastic.Client
-)
-
-func init() {
-	EsClient, err = elastic.NewClient(elastic.SetSniff(false))
+func (a *App) initDB() {
+	a.DB.EsClient, err = elastic.NewClient(elastic.SetSniff(false))
 	if err != nil {
 		log.Printf("initEsData connect failed,err:%v", err)
 		return
 	}
+	a.DB.MysqlClient, err = gorm.Open(mysql.Open(config.Dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
+	a.DB.RedisClient = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       7,  // use default DB
+	})
+
 }
 
 // OnStartup 初始化
 func (a *App) OnStartup(ctx context.Context) {
 	a.Ctx = ctx
+	a.initDB()
+
 	cfgPath := utils.GetCfgPath()
 
 	//课程管理
 	a.CourseManage = service.CourseManage{
 		ElasticIndex: config.ElasticIndex,
-		Client:       EsClient,
+		Client:       a.DB.EsClient,
 		Err:          nil,
-		PageSize:     10,
+		PageSize:     20,
 	}
 
 	//设置
@@ -66,10 +83,10 @@ func (a *App) OnStartup(ctx context.Context) {
 	a.Log.Info("OnStartup begin")
 
 	//任务管理初始化
-	a.TaskManage = TaskManager{}
-	a.TaskManage.TasksDB = NewTaskDB()
+	a.TaskManage = service.NewTask(a.DB.MysqlClient)
 
-	a.ResourceManage = service.NewResource()
+	//资源管理
+	a.ResourceManage = service.NewResource(a.DB.MysqlClient)
 }
 
 // diag ...

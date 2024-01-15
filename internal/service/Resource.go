@@ -4,10 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/HulkLiu/WtTools/internal/config"
 	"github.com/tealeg/xlsx"
 	"golang.org/x/sync/errgroup"
-	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"log"
 	"net/http"
@@ -39,10 +37,6 @@ type ResourceLog struct {
 	Timestamp time.Time
 }
 
-var (
-	db *gorm.DB
-)
-
 // ResourcesList  资源列表
 type ResourcesList struct {
 	List *[]Resource
@@ -53,19 +47,14 @@ type ResourceManage struct {
 	Resources    ResourcesList
 	RuleResource ResourceRule
 	LogResource  ResourceLog
-	ResourceDB   *gorm.DB
+	db           *gorm.DB
 	DSN          string
 }
 
-func NewResource() ResourceManage {
-	var err error
-	// 这里需要替换成你的数据库连接信息
-	db, err = gorm.Open(mysql.Open(config.Dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
-	}
+func NewResource(db *gorm.DB) ResourceManage {
+
 	r := ResourceManage{
-		ResourceDB: db,
+		db: db,
 	}
 	// 设置创建表的默认字符集为utf-8
 	db.Set("gorm:table_options", "ENGINE=InnoDB DEFAULT CHARSET=utf8")
@@ -82,7 +71,7 @@ func NewResource() ResourceManage {
 func (r *ResourceManage) ListResources() error {
 	var resources []Resource
 	//var resources map[string]Resource
-	result := db.Find(&resources)
+	result := r.db.Find(&resources)
 	r.Resources.List = &resources
 	return result.Error
 }
@@ -168,7 +157,7 @@ func (r *ResourceManage) AddResource(t Resource) error {
 		}
 	}
 
-	result := db.Create(&resource)
+	result := r.db.Create(&resource)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -178,7 +167,7 @@ func (r *ResourceManage) AddResource(t Resource) error {
 // UpdateResource 更新资源信息
 func (r *ResourceManage) UpdateResource(t Resource) error {
 
-	result := db.Model(&Resource{}).Where("id = ?", t.ID).Updates(Resource{URL: t.URL, Status: t.Status, UpdatedAt: time.Now()})
+	result := r.db.Model(&Resource{}).Where("id = ?", t.ID).Updates(Resource{URL: t.URL, Status: t.Status, UpdatedAt: time.Now()})
 	if result.Error != nil {
 		return result.Error
 	}
@@ -187,7 +176,7 @@ func (r *ResourceManage) UpdateResource(t Resource) error {
 
 // DeleteResource 删除资源
 func (r *ResourceManage) DeleteResource(id int) error {
-	result := db.Delete(&Resource{}, id)
+	result := r.db.Delete(&Resource{}, id)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -198,7 +187,7 @@ func (r *ResourceManage) DeleteResource(id int) error {
 func (r *ResourceManage) CheckResourceAll() (map[string]string, error) {
 	var resources []Resource
 	//result := db.First(&resource, id)
-	result := db.Find(&resources)
+	result := r.db.Find(&resources)
 	var checkMap = make(map[string]string, len(resources))
 
 	if result.Error != nil {
@@ -230,18 +219,6 @@ func (r *ResourceManage) CheckResourceAll() (map[string]string, error) {
 
 }
 
-// AddLog 添加日志
-func AddLog(message string) {
-	logEntry := ResourceLog{
-		Message:   message,
-		Timestamp: time.Now(),
-	}
-	result := db.Create(&logEntry)
-	if result.Error != nil {
-		log.Println("Error creating log:", result.Error)
-	}
-}
-
 func test() {
 	r := ResourceManage{}
 	// 示例：创建资源并添加到数据库
@@ -257,7 +234,7 @@ func test() {
 	//fmt.Println("Resource available:", isAvailable)
 
 	// 示例：添加日志
-	AddLog("Resource ExampleResource was checked for availability")
+	//AddLog("Resource ExampleResource was checked for availability")
 
 	// 示例：列出所有资源
 	err := r.ListResources()

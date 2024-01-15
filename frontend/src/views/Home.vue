@@ -17,71 +17,16 @@
         :data="listData"
         :pagination="pagination"
         :bordered="false"
+
     />
   </n-space>
 </template>
 
 <script>
-import { defineComponent, ref } from "vue";
+import {defineComponent, h, onMounted, ref} from "vue";
 import {SearchCourse} from "../../wailsjs/go/app/App.js";
+import {NButton,NTag} from "naive-ui";
 
-
-const columns = [
-  {
-    title: "Name",
-    key: "name",
-    sorter: "default"
-  },
-  {
-    title: "Age",
-    key: "age",
-    sorter: (row1, row2) => row1.age - row2.age
-  },
-  {
-    title: "Address",
-    key: "address",
-    filterOptions: [
-      {
-        label: "London",
-        value: "London"
-      },
-      {
-        label: "New York",
-        value: "New York"
-      }
-    ],
-    filter: (value, row) => {
-      return !!~row.address.indexOf(value);
-    }
-  }
-];
-
-const data = [
-  {
-    key: 0,
-    name: "John Brown",
-    age: 18,
-    address: "New York No. 1 Lake Park"
-  },
-  {
-    key: 1,
-    name: "Jim Green",
-    age: 28,
-    address: "London No. 1 Lake Park"
-  },
-  {
-    key: 2,
-    name: "Joe Black",
-    age: 38,
-    address: "Sidney No. 1 Lake Park"
-  },
-  {
-    key: 3,
-    name: "Jim Red",
-    age: 48,
-    address: "London No. 2 Lake Park"
-  }
-];
 
 export default defineComponent({
   setup() {
@@ -94,8 +39,11 @@ export default defineComponent({
       fileName: "sorter-filter",
       keepOriginalData: false
     });
+    onMounted(() => {
+      List()
+    })
     const List = () =>{
-      alert(1)
+      // alert(1)
       SearchCourse(JSON.stringify(keyword.value)).then(res => {
         console.log(res)
 
@@ -114,6 +62,10 @@ export default defineComponent({
       })
     }
     const keyword = ref()
+    const openUrl = (url) => {
+      window.open(url, '_blank');
+
+    }
 
     return {
       keyword,
@@ -122,8 +74,94 @@ export default defineComponent({
       tableRef,
       downloadCsv,
       exportSorterAndFilterCsv,
-      columns,
-      pagination: false
+      columns : [
+        {
+          title: "分类",
+          key: "LanguageType",
+          width: 100,
+          ellipsis: true,
+          render (row) {
+            return h(
+                NTag,
+                {
+                  size: "small",
+                },
+                { default: () => row.Payload.LanguageType}
+            );
+          }
+        },
+        {
+          title: "最后更新",
+          key: "LastTime",
+          width: 100,
+          ellipsis: true,
+          render (row) {
+            return h(
+                NTag,
+                {
+                  size: "small",
+                },
+                { default: () => row.Payload.LastTime}
+            );
+          }
+        },
+        {
+          title: "标题",
+          key: "Title",
+          width: 300,
+          ellipsis: true,
+          render (row) {
+            return h(
+                NButton,
+                {
+                  size: "small",
+                  onClick: () => showDataModal(row)
+                },
+                { default: () => row.Payload.Title}
+            );
+          }
+        },
+
+        {
+          title: "Url",
+          key: "Url",
+          width: 300,
+          ellipsis: true,
+          render(row) {
+            return h(
+                NButton,
+                {
+                  strong: true,
+                  tertiary: true,
+                  size: "small",
+                  onClick: () => openUrl(row.Url)
+                },
+                { default: () => row.Url }
+            );
+          }
+        },
+
+        // {
+        //   title: "操作",
+        //   key: "Title",
+        //   render (row) {
+        //     return h(
+        //         NButton,
+        //         {
+        //           size: "small",
+        //           onClick: () => deleteRow(row)
+        //         },
+        //         { default: () => "删除"}
+        //     );
+        //   }
+        // },
+        // {
+        //   title: '本地链接',
+        //   key: 'ShortLocal',
+        // }
+      ],
+
+      pagination: 20
     };
   }
 });
