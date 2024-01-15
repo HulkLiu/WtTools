@@ -2,6 +2,10 @@ package app
 
 import (
 	"fmt"
+	"log"
+	"regexp"
+	"time"
+
 	"github.com/HulkLiu/WtTools/internal/config"
 	"github.com/HulkLiu/WtTools/internal/engine"
 	"github.com/HulkLiu/WtTools/internal/parser"
@@ -9,14 +13,15 @@ import (
 	"github.com/HulkLiu/WtTools/internal/scheduler"
 	"github.com/HulkLiu/WtTools/internal/utils"
 	"github.com/go-redis/redis"
-	"log"
-	"regexp"
-	"sync"
-	"time"
 )
 
 type SearchEngine interface {
 	Search(keyword string) error
+}
+
+var searchEngine map[string]parser.Parser = map[string]parser.Parser{
+	"666php": parser.NewJava666(),
+	"xue600": parser.NewXue600(),
 }
 
 func getMysqlData() []string {
@@ -29,7 +34,9 @@ func getMysqlData() []string {
 }
 
 func (a *App) SearchCourse(keyword string) *utils.Response {
-	keyword = "golang"
+	if keyword == "" {
+		keyword = "golang"
+	}
 
 	//Redis 缓存
 	cachedResult, err := a.DB.RedisClient.Get(keyword).Result()
@@ -48,12 +55,12 @@ func (a *App) SearchCourse(keyword string) *utils.Response {
 			RequestProcessor: engine.Worker,
 		}
 		//初始化爬虫对象
-		searchEngines := map[string]SearchEngine{
-			"666php": &parser.Java666SearchEngine{E: e},
-			"600xue": &parser.Xue600SearchEngine{E: e},
-		}
+		// searchEngines := map[string]SearchEngine{
+		// 	"666php": &parser.Java666SearchEngine{E: e},
+		// 	"600xue": &parser.Xue600SearchEngine{E: e},
+		// }
 		//执行爬虫动作
-		go searchManage(keyword, getMysqlData(), searchEngines)
+		go searchManage(e, keyword, getMysqlData())
 	} else if err != nil {
 		log.Printf("Failed to get from cache: %v", err)
 	} else {
@@ -85,22 +92,21 @@ func regexpUrl(url string) string {
 	return result[1]
 }
 
-var wg sync.WaitGroup
-
-func searchManage(keyword string, arr []string, searchEngines map[string]SearchEngine) {
+func searchManage(e engine.Concurrent, keyword string, arr []string) {
 	if len(arr) == 0 {
 		return
 	}
 
 	for _, v := range arr {
-		wg.Add(1)
-		url := v + keyword
-		go func(u string) {
-			defer wg.Done()
-			searchEngine := searchEngines[regexpUrl(url)]
-			searchEngine.Search(u)
-		}(url)
+		uri := regexpUrl(v)
+		fmt.Println("uri:", uri)
+		if _parser, ok := searchEngine[uri]; ok {
+			e.Scheduler.Submit(engine.Request{
+				Url:        v + keyword,
+				ParserFunc: _parser.ClassPage,
+			})
+		}
 	}
 
-	wg.Wait()
+	e.Run()
 }

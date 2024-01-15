@@ -1,13 +1,14 @@
 package parser
 
 import (
+	"log"
+	"regexp"
+	"time"
+
 	"github.com/HulkLiu/WtTools/internal/config"
 	"github.com/HulkLiu/WtTools/internal/engine"
 	"github.com/HulkLiu/WtTools/internal/fetcher"
 	"github.com/HulkLiu/WtTools/internal/model"
-	"log"
-	"regexp"
-	"time"
 )
 
 type Xue600SearchEngine struct {
@@ -44,6 +45,19 @@ func (x *Xue600SearchEngine) Search(url string) error {
 		ParserFunc: data.ClassPage,
 	})
 	return nil
+}
+
+// 初始化
+func NewXue600() Parser {
+	return &Xue600{
+		ClassListRe:     regexp.MustCompile(`<a target="_blank" href="(.*?)" title=".*?" rel="bookmark">(.*?)<\/a>`),
+		ClassPageRe:     regexp.MustCompile(`(https:\/\/www.600xue.com)`),
+		UrlMap:          make(map[string]string),
+		TitleRE:         regexp.MustCompile(`<h2>(.*)<\/h2>`),
+		IdRe:            regexp.MustCompile(`com\/(.*?)\/`),
+		LanguageTypeSel: "body > div > div.site-content > div > div.breadcrumbs > a:nth-child(3)",
+		LimitItem:       5,
+	}
 }
 
 func (a *Xue600) ClassPage(c []byte) engine.ParseResult {

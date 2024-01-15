@@ -1,13 +1,14 @@
 package parser
 
 import (
+	"log"
+	"regexp"
+	"time"
+
 	"github.com/HulkLiu/WtTools/internal/config"
 	"github.com/HulkLiu/WtTools/internal/engine"
 	"github.com/HulkLiu/WtTools/internal/fetcher"
 	"github.com/HulkLiu/WtTools/internal/model"
-	"log"
-	"regexp"
-	"time"
 )
 
 type Java666SearchEngine struct {
@@ -51,6 +52,17 @@ func (j *Java666SearchEngine) Search(url string) error {
 		ParserFunc: data.ClassPage,
 	})
 	return nil
+}
+
+func NewJava666() Parser {
+	return &Java666{
+		ClassListRe: regexp.MustCompile(`<a target="_blank" href="(https:\/\/www.666php.com\/\d{1,}.html)" title=".*?" rel="bookmark">(.*?)<\/a>`),
+		ClassPageRe: regexp.MustCompile(`(https:\/\/www.666php.com)`),
+		UrlMap:      make(map[string]string),
+		TitleRE:     regexp.MustCompile(`<h2>(.*)<\/h2>`),
+		IdRe:        regexp.MustCompile(`com\/(.*?).html`),
+		LimitItem:   5,
+	}
 }
 
 func (a *Java666) ClassPage(c []byte) engine.ParseResult {

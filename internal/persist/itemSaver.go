@@ -4,13 +4,12 @@ import (
 	"context"
 
 	"fmt"
-	"github.com/HulkLiu/WtTools/internal/config"
+
 	"github.com/HulkLiu/WtTools/internal/engine"
 	"github.com/olivere/elastic/v7"
-	"log"
 )
 
-//http://localhost:9200/php6661/_search
+// http://localhost:9200/php6661/_search
 var err error
 
 func ItemSaver(index string, client *elastic.Client) (chan engine.Item, error) {
@@ -20,18 +19,18 @@ func ItemSaver(index string, client *elastic.Client) (chan engine.Item, error) {
 	//}
 
 	out := make(chan engine.Item)
-	count := 0
+	// count := 0
 	go func() {
 		for {
 			item := <-out
 			//fmt.Printf("%v -> got data %v\n", count, item)
-			if config.IsSAVE {
-				if err = save(item, client, index); err != nil {
-					log.Printf("save false data %+v\n", item.Url)
-				} else {
-					count++
-				}
-			}
+			// if config.IsSAVE {
+			// 	if err = save(item, client, index); err != nil {
+			// 		log.Printf("save false data %+v\n", item.Url)
+			// 	} else {
+			// 		count++
+			// 	}
+			// }
 			fmt.Printf("Has successfully obtained data for %v items\n", item.Url)
 
 		}
